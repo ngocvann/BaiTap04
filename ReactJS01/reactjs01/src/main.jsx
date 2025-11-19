@@ -8,6 +8,8 @@ import HomePage from "./pages/home";
 import Layout from "./components/layout/layout";
 import { AuthWrapper } from "./components/context/AuthWrapper";
 import "./styles/global.css";
+import ForgotPage from "./pages/forgot";
+import ResetPage from "./pages/reset";
 
 const router = createBrowserRouter([
   {
@@ -18,6 +20,14 @@ const router = createBrowserRouter([
       { path: "register", element: <RegisterPage /> },
       { path: "login", element: <LoginPage /> },
     ],
+  },
+  {
+    path: "forgot",
+    element: <ForgotPage />,
+  },
+  {
+    path: "reset",
+    element: <ResetPage />,
   },
 ]);
 

@@ -22,3 +22,15 @@ export const getAccountAPI = () => {
 export const getUserAPI = () => {
   return axios.get("/api/user");
 };
+
+export const forgotPasswordAPI = (email) => {
+  return axios.post("/api/forgot-password", { email });
+};
+
+export const resetPasswordAPI = (email, otp, newPassword) => {
+  return axios.post("/api/reset-password", {
+    email,
+    otp,
+    newPassword,
+  });
+};

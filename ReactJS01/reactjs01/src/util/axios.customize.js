@@ -22,5 +22,6 @@ instance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+console.log("BASE URL = ", import.meta.env.VITE_BACKEND_URL);
 
 export default instance;
