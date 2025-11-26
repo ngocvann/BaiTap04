@@ -25,4 +25,14 @@ const getAccount = async (req, res) => {
   return res.status(200).json(req.user);
 };
 
-module.exports = { createUser, handleLogin, getUser, getAccount };
+const deleteUser = async (req, res) => {
+  const userId = req.params.id;
+  // Ở đây bạn sẽ viết logic gọi Database để xóa (ví dụ: await User.delete(userId))
+  // Tạm thời trả về thông báo thành công để server chạy được
+  return res.status(200).json({
+    message: `Đã thực hiện lệnh xóa user có ID: ${userId}`,
+    status: "success",
+  });
+};
+
+module.exports = { createUser, handleLogin, getUser, getAccount, deleteUser };

@@ -1,57 +1,85 @@
-import { Form, Input, Button, notification } from "antd";
-import { loginAPI } from "../util/api";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-const LoginPage = () => {
+const Login = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const onFinish = async (values) => {
-    const { email, password } = values;
-    const res = await loginAPI(email, password);
+  const handleLogin = async (e) => {
+    e.preventDefault(); // Chặn reload trang
 
-    if (res.EC === 0) {
-      notification.success({
-        message: "Success",
-        description: "Login success",
+    // 1. Validation cơ bản ở Frontend
+    if (!email.includes("@")) {
+      setError("Email không đúng định dạng!");
+      return;
+    }
+    if (password.length === 0) {
+      setError("Vui lòng nhập mật khẩu!");
+      return;
+    }
+
+    try {
+      // Gọi API Backend
+      const res = await fetch("http://localhost:5000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
 
-      localStorage.setItem("access_token", res.token);
-      navigate("/");
-    } else {
-      notification.error({
-        message: "Error",
-        description: res.EM,
-      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        // Hiển thị lỗi từ Backend (nếu có)
+        setError(
+          data.errors
+            ? data.errors[0].msg
+            : data.message || "Đăng nhập thất bại"
+        );
+      } else {
+        // 2. Lưu Token và Info User vào LocalStorage
+        localStorage.setItem("token", data.access_token);
+
+        // Giả sử backend trả về role, nếu không có thì cần gọi API /user để lấy
+        // Ở đây mình ví dụ role được trả về luôn hoặc bạn tự decode JWT
+        if (email.includes("admin")) {
+          localStorage.setItem("role", "admin"); // Demo logic
+        } else {
+          localStorage.setItem("role", "user");
+        }
+
+        alert("Đăng nhập thành công!");
+        navigate("/products"); // Chuyển hướng sang trang sản phẩm
+      }
+    } catch (err) {
+      console.error(err); // Biến err đã được sử dụng tại đây
+      setError("Lỗi kết nối Server!");
     }
   };
 
   return (
-    <div style={{ padding: "20px 40px" }}>
-      <h1>Login</h1>
+    <div className="form-box">
+      <h2>Đăng Nhập</h2>
+      {error && <p className="error-msg">{error}</p>}
 
-      <Form onFinish={onFinish} layout="vertical">
-        <Form.Item label="Email" name="email" rules={[{ required: true }]}>
-          <Input />
-        </Form.Item>
-
-        <Form.Item
-          label="Password"
-          name="password"
-          rules={[{ required: true }]}
-        >
-          <Input.Password />
-        </Form.Item>
-
-        <Button type="primary" htmlType="submit">
-          Login
-        </Button>
-
-        <div style={{ marginTop: 20 }}>
-          <Link to="/register">Don't have an account?</Link>
-        </div>
-      </Form>
+      <input
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <input
+        type="password"
+        placeholder="Mật khẩu"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <button className="btn-submit" onClick={handleLogin}>
+        LOGIN
+      </button>
     </div>
   );
 };
 
-export default LoginPage;
+export default Login;
