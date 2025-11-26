@@ -74,4 +74,11 @@ const resetPassword = async (req, res) => {
   }
 };
 
-module.exports = { createUser, handleLogin, getUser, getAccount };
+module.exports = {
+  createUser,
+  handleLogin,
+  getUser,
+  getAccount,
+  resetPassword,
+  forgotPassword,
+};
