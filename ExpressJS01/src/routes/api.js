@@ -7,6 +7,7 @@ const {
   forgotPassword,
   resetPassword,
 } = require("../controllers/userController");
+const productController = require("../controllers/productController");
 const auth = require("../middleware/auth");
 
 const routerAPI = express.Router();
@@ -19,5 +20,7 @@ routerAPI.post("/reset-password", resetPassword);
 
 routerAPI.get("/user", getUser);
 routerAPI.get("/account", auth, getAccount);
+
+routerAPI.get("/products", productController.getProducts);
 
 module.exports = routerAPI;

@@ -34,3 +34,7 @@ export const resetPasswordAPI = (email, otp, newPassword) => {
     newPassword,
   });
 };
+
+export const fetchProductSearch = (params) => {
+  return axios.get("/api/products", { params });
+};
