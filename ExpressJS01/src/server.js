@@ -1,4 +1,7 @@
 require("dotenv").config();
+require("./models/product");
+require("./models/favoriteProduct");
+require("./models");
 const express = require("express");
 const cors = require("cors");
 

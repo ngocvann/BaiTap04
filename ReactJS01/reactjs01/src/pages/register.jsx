@@ -1,21 +1,36 @@
 import { Form, Input, Button, notification } from "antd";
 import { createUserAPI } from "../util/api";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const RegisterPage = () => {
+  const navigate = useNavigate();
+
   const onFinish = async (values) => {
     const { name, email, password } = values;
-    const res = await createUserAPI(name, email, password);
 
-    if (res.EC === 0) {
-      notification.success({
-        message: "Success",
-        description: "Register success!",
-      });
-    } else {
+    try {
+      const res = await createUserAPI(name, email, password);
+
+      console.log("REGISTER RESPONSE:", res);
+
+      if (res.EC === 0) {
+        notification.success({
+          message: "Success",
+          description: "Register success!",
+        });
+
+        navigate("/login");
+      } else {
+        notification.error({
+          message: "Error",
+          description: res.EM,
+        });
+      }
+    } catch (error) {
+      console.error(error);
       notification.error({
-        message: "Error",
-        description: res.EM,
+        message: "Server Error",
+        description: "Could not register user",
       });
     }
   };

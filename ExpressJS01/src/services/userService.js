@@ -26,9 +26,9 @@ const loginService = async (email, password) => {
   if (!match) return { EC: 1, EM: "Sai mật khẩu!" };
 
   const token = jwt.sign(
-    { email: user.email, name: user.name },
+    { id: user.id, email: user.email, name: user.name },
     process.env.JWT_SECRET || "SECRET",
-    { expiresIn: "1h" }
+    { expiresIn: "24h" }
   );
 
   return { EC: 0, EM: "OK", token, user };

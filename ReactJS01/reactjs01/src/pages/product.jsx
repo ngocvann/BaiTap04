@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
-import { fetchProductSearch } from "../util/api"; // <--- Import đúng tên hàm bạn vừa gửi
-import "./product.css"; // File CSS ở bước 2
+import { fetchProductSearch } from "../util/api";
+import { useAuth } from "../components/context/auth.context";
+import "./product.css";
+import { Link } from "react-router-dom";
 
 const ProductPage = () => {
   const [listProducts, setListProducts] = useState([]);
   const [totalPage, setTotalPage] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  const { user, favorites, toggleFavorite } = useAuth();
 
   // State lưu trữ bộ lọc
   const [filter, setFilter] = useState({
@@ -18,33 +22,56 @@ const ProductPage = () => {
     sort: "-createdAt", // Mặc định mới nhất
   });
 
-  // Hàm gọi API
+  // Gọi API
   const handleSearchProducts = async () => {
     setLoading(true);
     try {
+      // axios đã trả về data => res CHÍNH LÀ object data từ backend
       const res = await fetchProductSearch(filter);
-      if (res && res.data && res.data.result) {
-        setListProducts(res.data.result);
-        setTotalPage(res.data.meta.pages);
+
+      if (res && res.result) {
+        setListProducts(res.result);
+        setTotalPage(res.meta?.pages || 0);
+      } else {
+        setListProducts([]);
+        setTotalPage(0);
       }
     } catch (error) {
       console.error("Lỗi tải dữ liệu:", error);
+      setListProducts([]);
+      setTotalPage(0);
     }
     setLoading(false);
   };
 
-  // Gọi API khi filter thay đổi (Debounce để tránh gọi liên tục khi gõ phím)
+  // Gọi API khi filter thay đổi (debounce 0.6s)
   useEffect(() => {
     const timer = setTimeout(() => {
       handleSearchProducts();
-    }, 600); // Đợi 0.6s sau khi người dùng ngừng thao tác mới gọi API
+    }, 600);
     return () => clearTimeout(timer);
   }, [filter]);
 
   // Hàm update state filter
   const handleChangeFilter = (key, value) => {
-    setFilter({ ...filter, [key]: value, page: 1 }); // Reset về trang 1 khi lọc
+    setFilter((prev) => ({
+      ...prev,
+      [key]: value,
+      page: 1, // Reset về trang 1 khi lọc
+    }));
   };
+
+  const handleToggleFavorite = async (productId) => {
+    if (!user) {
+      alert("Bạn cần đăng nhập để thêm sản phẩm yêu thích");
+      return;
+    }
+    await toggleFavorite(productId);
+    // state favorites sẽ được context tự cập nhật lại
+  };
+
+  const isFavoriteProduct = (id) =>
+    Array.isArray(favorites) && favorites.some((p) => p.id === id);
 
   return (
     <div className="product-container">
@@ -57,7 +84,7 @@ const ProductPage = () => {
             <label>Tên sản phẩm</label>
             <input
               type="text"
-              placeholder="Ví dụ: iPhone..."
+              placeholder="Ví dụ: Harry Potter..."
               onChange={(e) => handleChangeFilter("name", e.target.value)}
             />
           </div>
@@ -68,9 +95,11 @@ const ProductPage = () => {
               onChange={(e) => handleChangeFilter("category", e.target.value)}
             >
               <option value="">Tất cả</option>
-              <option value="DIENTHOAI">Điện thoại</option>
-              <option value="LAPTOP">Laptop</option>
-              <option value="PHUKIEN">Phụ kiện</option>
+              <option value="MANGA">Manga</option>
+              <option value="LIGHTNOVEL">Light Novel</option>
+              <option value="KINHTE">Kinh tế</option>
+              <option value="TAMLY">Tâm lý</option>
+              <option value="TIEUTHUYET">Tiểu thuyết</option>
             </select>
           </div>
 
@@ -112,25 +141,53 @@ const ProductPage = () => {
           )}
 
           <div className="product-grid">
-            {listProducts.map((item) => (
-              <div key={item.id} className="product-card">
-                {/* Nếu có ảnh thì hiện, ko thì hiện placeholder */}
-                <div className="img-placeholder">
-                  {item.image ? "IMG" : "No Image"}
-                </div>
-                <h3>{item.name}</h3>
-                <p className="price">
-                  {new Intl.NumberFormat("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  }).format(item.price)}
-                </p>
-                <div className="meta">
-                  <span>👁 {item.views}</span>
-                  <span>📂 {item.category}</span>
-                </div>
-              </div>
-            ))}
+            {listProducts.map((item) => {
+              const isFav = isFavoriteProduct(item.id);
+
+              return (
+                <Link
+                  to={`/products/${item.id}`}
+                  key={item.id}
+                  className="product-card"
+                >
+                  <div className="product-card-header">
+                    <div className="img-placeholder">
+                      {item.image ? (
+                        <img src={item.image} alt="" className="card-image" />
+                      ) : (
+                        "No Image"
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="product-title-row">
+                    <h3>{item.name}</h3>
+
+                    <button
+                      className={`favorite-toggle ${isFav ? "active" : ""}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleToggleFavorite(item.id);
+                      }}
+                    >
+                      {isFav ? "♥" : "♡"}
+                    </button>
+                  </div>
+
+                  <p className="price">
+                    {new Intl.NumberFormat("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    }).format(item.price)}
+                  </p>
+                  <div className="meta">
+                    <span>👁 {item.views}</span>
+                    <span>📂 {item.category}</span>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
 
           {/* Phân trang */}
@@ -140,7 +197,9 @@ const ProductPage = () => {
                 <button
                   key={index + 1}
                   className={filter.page === index + 1 ? "active" : ""}
-                  onClick={() => setFilter({ ...filter, page: index + 1 })}
+                  onClick={() =>
+                    setFilter((prev) => ({ ...prev, page: index + 1 }))
+                  }
                 >
                   {index + 1}
                 </button>
