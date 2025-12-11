@@ -1,25 +1,30 @@
 import { Form, Input, Button, notification } from "antd";
 import { loginAPI } from "../util/api";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../components/context/auth.context";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { setUser } = useAuth();
 
-  const onFinish = async (values) => {
-    const { email, password } = values;
+  const onFinish = async ({ email, password }) => {
     const res = await loginAPI(email, password);
 
     if (res.EC === 0) {
+      // Lưu token
+      localStorage.setItem("token", res.token);
+
+      // Lưu user vào context
+      setUser(res.user);
+
       notification.success({
-        message: "Success",
-        description: "Login success",
+        message: "Đăng nhập thành công!",
       });
 
-      localStorage.setItem("access_token", res.token);
       navigate("/");
     } else {
       notification.error({
-        message: "Error",
+        message: "Lỗi đăng nhập",
         description: res.EM,
       });
     }

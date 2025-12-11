@@ -22,7 +22,11 @@ const getUser = async (req, res) => {
 };
 
 const getAccount = async (req, res) => {
-  return res.status(200).json(req.user);
+  res.json({
+    id: req.user.id,
+    email: req.user.email,
+    name: req.user.name,
+  });
 };
 
 const sendMail = require("../util/sendMail");

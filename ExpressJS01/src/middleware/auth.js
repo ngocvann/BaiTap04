@@ -7,7 +7,7 @@ const auth = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (e) {
-    return res.status(401).json("Token không hợp lệ!");
+    return res.status(401).json({ error: "Invalid token" });
   }
 };
 
